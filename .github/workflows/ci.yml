@@ -1,0 +1,37 @@
+name: CI
+
+# Read-only checks on pull requests and non-main pushes, so a broken commit
+# can't reach main. Deploy (with Pages write access) stays in deploy.yml,
+# which only runs on main. Mirrors the deploy gate's build+test+a11y steps.
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Unit tests (Vitest, incl. spec KATs)
+        run: npm test
+      - name: Build (typecheck gates the build)
+        run: npm run build
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: Accessibility gate (axe-core, WCAG A/AA, both themes)
+        run: npm run test:a11y

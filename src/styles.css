@@ -1,5 +1,11 @@
 /* DKG Gate — theme + layout. Dark default; light under [data-theme="light"]. */
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
   color-scheme: dark;
   --bg: #0d1524;
@@ -333,6 +339,11 @@ body {
   border: 1px solid var(--border);
   border-radius: 10px;
   margin: 0.6rem 0;
+  /* Positioned ancestor so absolutely-positioned .sr-only spans inside the
+     horizontally-scrolling table anchor here (and get clipped) rather than to
+     the viewport, where their off-screen static offset would grow the page's
+     scrollWidth and break mobile reflow. */
+  position: relative;
 }
 
 .share-matrix,
@@ -594,6 +605,19 @@ body {
   .picker {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  /* Long <select> option text (e.g. the cheat-reveal choices) has a wide
+     min-content; in the stacked column let the control shrink and fill its
+     field instead of forcing the page wider than the viewport. */
+  .field,
+  .select-wrap {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #app select {
+    width: 100%;
   }
 
   .party-row {

@@ -22,10 +22,11 @@ Group arithmetic is **ristretto255** (RFC 9496) via [`@noble/curves`](https://gi
 
 ## Exhibits
 
-1. **The ceremony** — step Pedersen's DKG round by round for your choice of `n` and `t`: round 1 (every party deals), round 2 (everyone verifies against public commitments), complaints & reveals, the qualified set, and key assembly. The share-delivery matrix shows every dealt share; the assembly panel shows `PK` built as a live sum of contributions.
-2. **Cheating-dealer break-it** — arm one dealer to send a corrupted share. Watch the victim raise a public **complaint**, and choose whether the dealer **doubles down** (its reveal fails the same public check → disqualified, entire contribution discarded) or **backs down** (reveals the correct share → stays qualified, victim adopts it). With `t = n`, one disqualification drops `QUAL` below `t` and the ceremony **aborts with no key** — fail closed.
-3. **Prove the threshold** — pick any subset of the real final shares, Lagrange-reconstruct, and **compare `reconstructed·G` against the ceremony's `PK` byte for byte.** `t` shares regenerate the key; `t−1` land on a wrong secret — shown, not asserted.
-4. **Bias the key — the GJKR attack & fix** — run the real rushing-adversary attack against naive commitments: all `2ᵏ` candidate keys are enumerated as genuine subset sums, and the adversary steers the final key to a target. Flip on the GJKR hiding commitments and the same lever produces only blind `1/16` luck. A ×20 batch counts the empirical success rate against theory.
+1. **The ceremony (with break-it cheating)** — step Pedersen's DKG round by round for your choice of `n` and `t`: round 1 (every party deals), round 2 (everyone verifies against public commitments), complaints & reveals, the qualified set, and key assembly. The share-delivery matrix shows every dealt share; the assembly panel shows `PK` built as a live sum of contributions. Arm one dealer to send a corrupted share and watch the victim raise a public **complaint**: the dealer either **doubles down** (its reveal fails the same public check → disqualified, entire contribution discarded) or **backs down** (reveals the correct share → stays qualified, victim adopts it). With `t = n`, one disqualification drops `QUAL` below `t` and the ceremony **aborts with no key** — fail closed.
+2. **Prove the threshold** — pick any subset of the real final shares, Lagrange-reconstruct, and **compare `reconstructed·G` against the ceremony's `PK` byte for byte.** `t` shares regenerate the key; `t−1` land on a wrong secret — shown, not asserted.
+3. **Bias the key — the GJKR attack & fix** — run the real rushing-adversary attack against naive commitments: all `2ᵏ` candidate keys are enumerated as genuine subset sums, and the adversary steers the final key to a target. Flip on the GJKR hiding commitments and the same lever produces only blind `1/16` luck. A ×20 batch counts the empirical success rate against theory.
+
+**A note on scope.** The runnable ceremony (Exhibit 1) is **Pedersen's DKG / Joint-Feldman** — every party deals a Feldman VSS and the sharings sum into one key, with public complaints and fail-closed qualification. Exhibit 3 then **models the specific attack GJKR (1999) closes and its fix**: it uses real hiding Pedersen commitments and real subset-sum key math to show why a rushing adversary can bias the naive key and why commit-then-reveal removes the information to aim with. It is a faithful model of the bias and the fix, **not** a second full commit-then-reveal ceremony with a separate Feldman-extraction phase — the insight is the teaching target, and it is exact.
 
 ## When to Use It
 
@@ -39,7 +40,7 @@ At the [live site](https://systemslibrarian.github.io/crypto-lab-dkg-gate/) you 
 
 ## What Can Go Wrong
 
-- **A malicious dealer** deals shares inconsistent with its commitments. Caught by the public complaint round; the same equation every honest party can run decides the outcome, so honesty is not a matter of trust. (Exhibit 2.)
+- **A malicious dealer** deals shares inconsistent with its commitments. Caught by the public complaint round; the same equation every honest party can run decides the outcome, so honesty is not a matter of trust. (Exhibit 1.)
 - **A rushing adversary** biases the joint key by choosing which of its own dealers survive to `QUAL` after seeing all contributions. This is the real flaw in naive Pedersen DKG, and the reason GJKR exists. (Exhibit 3.)
 - **Too many disqualifications** leave fewer than `t` honest dealers. The protocol **aborts with no key** rather than emitting a weak one.
 - **Reconstructing the secret** onto one machine — which this demo does in Exhibit 2 as an X-ray — is exactly what threshold *use* protocols avoid; doing it in production would defeat the entire point.
