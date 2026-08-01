@@ -14,6 +14,12 @@
   --text: #e9eef6;
   --text-dim: #9fb0c6;
   --border: #2c3a52;
+  /* Control boundaries only (buttons, selects). Those controls are filled with
+     --panel-2, which sits at 1.12:1 (dark) / 1.17:1 (light) against the --panel
+     behind them, so the border is the sole boundary and WCAG 2.1 SC 1.4.11
+     requires 3:1. --border stays as-is for decorative rules (panel outlines,
+     tables, dividers). */
+  --border-strong: #5874a3;
   --accent: #4a9dd6;
   --link: #8cc6ee;
   --ok: #46c98c;
@@ -29,6 +35,7 @@
   --text: #1c2635;
   --text-dim: #46566c;
   --border: #c6d0dd;
+  --border-strong: #6e87a8;
   --accent: #2c7cb0;
   --link: #1c6398;
   --ok: #177a4c;
@@ -179,7 +186,7 @@ body {
   appearance: none;
   background: var(--panel-2);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   padding: 0.4rem 1.7rem 0.4rem 0.6rem;
   font: inherit;
@@ -221,7 +228,7 @@ body {
   font-size: 0.95rem;
   color: var(--text);
   background: var(--panel-2);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   padding: 0.5rem 1rem;
   cursor: pointer;
