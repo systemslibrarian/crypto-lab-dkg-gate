@@ -149,11 +149,16 @@ export function mountBias(root: HTMLElement): void {
     for (let i = 0; i < 20; i++) {
       if (runBiasAttack(N_HONEST, k, nibSel.value, m).success) wins++
     }
+    // Naive: 1-(15/16)^(2^k) treats the 2^k subset keys as independent draws of an
+    // approximately balanced nibble — an independence heuristic, not an exact theorem
+    // (subset sums are correlated). GJKR: a blind 1-in-16 guess, exactly.
     const expected = m === 'naive' ? 100 * (1 - Math.pow(15 / 16, 1 << k)) : 100 / 16
+    const expectedLabel =
+      m === 'naive' ? `independence heuristic ≈ ${expected.toFixed(0)}%` : `blind guess = ${expected.toFixed(1)}%`
     const p = el('p', { class: `banner ${m === 'naive' ? 'banner-bad' : 'banner-ok'}` })
     p.append(
       mark(m === 'naive' ? 'bad' : 'ok', ''),
-      ` 20 fresh ceremonies, ${m === 'naive' ? 'naive commitments' : 'GJKR hiding commitments'}, k = ${k}: the adversary hit its target nibble ${wins}/20 times (theory ≈ ${expected.toFixed(0)}%). `,
+      ` 20 fresh ceremonies, ${m === 'naive' ? 'naive commitments' : 'GJKR hiding commitments'}, k = ${k}: the adversary hit its target nibble ${wins}/20 times (${expectedLabel}). `,
       m === 'naive'
         ? 'Every extra corrupted dealer doubles the candidate space.'
         : 'Controlling more dealers buys nothing once the view is hiding.',

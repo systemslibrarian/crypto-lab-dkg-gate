@@ -270,8 +270,51 @@
           </li>
           <li role="listitem">
             <strong>Synchronous, honest-majority only.</strong> Asynchronous DKG, network adversaries, and
-            robust-under-crash variants are out of scope; what you see assumes reliable broadcast and t ≤ n honest
-            enough to finish.
+            robust-under-crash variants are out of scope; the next panel states, property by property, what is
+            assumed and against whom.
+          </li>
+        </ul>
+      </section>
+
+      <section class="card scope" aria-labelledby="threat-h">
+        <h2 id="threat-h">Secure against whom, for what?</h2>
+        <p class="note">
+          Two different numbers govern the claims below. <strong>t</strong> is the reconstruction threshold: t
+          final shares rebuild the secret, t−1 do not. <strong>f</strong> is how many parties an adversary
+          corrupts. They are not the same quantity, and each property has its own bound on f.
+        </p>
+        <ul role="list">
+          <li role="listitem">
+            <strong>Correctness &amp; agreement</strong> — everyone who finishes agrees on QUAL and PK. Holds for
+            any number of cheating dealers, because every complaint is decided by a public equation — but only
+            under the synchronous rounds and reliable broadcast this tab simulates. Implemented and tested:
+            complaints, disqualification, and the fail-closed abort.
+          </li>
+          <li role="listitem">
+            <strong>Secrecy of the group secret</strong> — a coalition of f ≤ t−1 share holders cannot
+            reconstruct (Shamir's bound), and secrecy is computational (discrete log), because each dealer's
+            Feldman commitment publishes A₀ = a₀·G. Implemented; Exhibit 2's reconstruction X-ray deliberately
+            violates it on screen, and says so.
+          </li>
+          <li role="listitem">
+            <strong>Output uniformity</strong> — fails against a rushing adversary with even one corrupted dealer
+            in the naive flow; that is Exhibit 3's attack. GJKR's commit-then-reveal restores it, which Exhibit 3
+            models rather than runs as a second full ceremony.
+          </li>
+          <li role="listitem">
+            <strong>Availability</strong> — the ceremony finishing, and a later t-of-n operation working, need at
+            least t qualified dealers and later t responsive share holders, so they tolerate f ≤ n−t withholding
+            or crashed parties. Demonstrated by Exhibit 2's t versus t−1 comparison; message loss is otherwise
+            unmodeled here.
+          </li>
+          <li role="listitem">
+            <strong>Channels</strong> — the protocol assumes authenticated private dealer-to-holder channels and
+            reliable synchronous broadcast. One tab playing all parties makes equivocation — telling different
+            parties different things — impossible by construction here, not defended against.
+          </li>
+          <li role="listitem">
+            <strong>Corruption model</strong> — static, fixed before the run. Rushing behaviour appears only in
+            Exhibit 3; adaptive corruption and denial of service are unmodeled.
           </li>
         </ul>
       </section>

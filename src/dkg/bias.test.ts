@@ -56,7 +56,13 @@ describe('GJKR commit-then-reveal closes the leak', () => {
     expect(r.finalHex).toBe(all.hex)
   })
 
-  it('across the same seed count, blind success stays near 1/16', () => {
+  it('paired seeds: blind (gjkr) wins are rare, rushing (naive) wins on the same seeds exceed them', () => {
+    // Paired trials — the same 12 seeds drive both modes, so the only variable
+    // is what the adversary's view reveals. Seeded RNG makes the counts exact
+    // properties of these seeds, not statistical estimates: 1 blind win in 12
+    // sits where a 1/16 guess should (expectation 0.75); 5 rushing wins reflect
+    // the ~64% per-run independence heuristic for k = 4. If either pinned count
+    // changes, the sampling changed — that is worth noticing, not retrying.
     const runs = Array.from({ length: 12 }, (_, i) =>
       runBiasAttack(3, 4, 'a', 'gjkr', seededRng(`bias-batch-${i}`)),
     )
@@ -65,6 +71,8 @@ describe('GJKR commit-then-reveal closes the leak', () => {
     )
     const blindWins = runs.filter((x) => x.success).length
     const rushWins = naiveRuns.filter((x) => x.success).length
+    expect(blindWins).toBe(1)
+    expect(rushWins).toBe(5)
     expect(rushWins).toBeGreaterThan(blindWins)
   })
 

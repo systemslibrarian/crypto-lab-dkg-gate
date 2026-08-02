@@ -45,6 +45,17 @@ At the [live site](https://systemslibrarian.github.io/crypto-lab-dkg-gate/) you 
 - **Too many disqualifications** leave fewer than `t` honest dealers. The protocol **aborts with no key** rather than emitting a weak one.
 - **Reconstructing the secret** onto one machine — which this demo does in Exhibit 2 as an X-ray — is exactly what threshold *use* protocols avoid; doing it in production would defeat the entire point.
 
+## Threat Model, Property by Property
+
+Two different numbers govern the claims: `t` is the **reconstruction threshold** (`t` shares rebuild the secret, `t−1` do not); `f` is **how many parties the adversary corrupts**. They are not the same quantity, and each property has its own bound on `f`:
+
+- **Correctness & agreement** (all finishers agree on `QUAL` and `PK`): any number of cheating dealers, because complaints are decided by a public equation — but only under the synchronous rounds and reliable broadcast this demo simulates in one tab. Implemented and tested.
+- **Secrecy of the group secret**: a coalition of `f ≤ t−1` share holders cannot reconstruct (Shamir's bound); secrecy is computational (discrete log) because Feldman commitments publish each dealer's `A₀ = a₀·G`. Exhibit 2's reconstruction X-ray deliberately violates it on screen, and says so.
+- **Output uniformity**: fails against a rushing adversary with even one corrupted dealer in the naive flow (Exhibit 3's attack); restored by GJKR commit-then-reveal, which Exhibit 3 models.
+- **Availability** (finishing; later `t`-of-`n` use): needs `≥ t` qualified dealers and later `≥ t` responsive holders, so tolerates `f ≤ n−t` withholding or crashed parties. Message loss is otherwise unmodeled.
+- **Channels**: authenticated private dealer-to-holder channels and reliable synchronous broadcast are assumed; one tab playing all parties makes equivocation impossible by construction here, not defended against.
+- **Corruption model**: static, fixed before the run. Rushing appears only in Exhibit 3; adaptive corruption and denial of service are unmodeled.
+
 ## Real-World Usage
 
 DKG underpins production threshold systems: FROST and GG20 threshold signatures (custody, multi-party wallets), distributed validator keys in proof-of-stake, DKG-based randomness beacons (e.g. drand-style), and MPC key-management services. The Pedersen/GJKR line is the classical synchronous, honest-majority foundation those build on.
