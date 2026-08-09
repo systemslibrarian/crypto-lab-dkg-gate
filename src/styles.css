@@ -21,6 +21,15 @@
      tables, dividers). */
   --border-strong: #5874a3;
   --accent: #4a9dd6;
+  /* Ink twin of --accent, in the spirit of --border-strong above: --accent is a
+     FILL and BORDER token here (the .btn-primary wash, the chip and phase-done
+     outlines, the focus ring, the .row-chosen tint), and the only place it is
+     used as TEXT is the candidate table's "← chosen" tag — which sits ON the
+     .row-chosen tint, one surface deeper than the panel --accent was tuned
+     against. In dark the two coincide — #4a9dd6 sampled on the tinted row is
+     4.59:1, over the line but with little room; see the light block for why
+     they cannot coincide there. */
+  --accent-text: #4a9dd6;
   --link: #8cc6ee;
   --ok: #46c98c;
   --bad: #ff7a7a;
@@ -37,6 +46,13 @@
   --border: #c6d0dd;
   --border-strong: #6e87a8;
   --accent: #2c7cb0;
+  /* #2c7cb0 measures 4.55:1 on the white --panel — just over the line — and
+     3.82:1 once .row-chosen lays color-mix(--accent 14%) over that panel, which
+     is exactly where the "← chosen" tag is painted. #1f5c85 sampled on that
+     tinted row is 6.02:1 (7.17:1 computed against the opaque white panel).
+     --accent itself is unchanged: as a
+     fill and a 2px focus ring it only owes 3:1 (SC 1.4.11), which it clears. */
+  --accent-text: #1f5c85;
   --link: #1c6398;
   --ok: #177a4c;
   --bad: #c23636;
@@ -570,7 +586,7 @@ body {
 }
 
 .chosen-tag {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .cand-table .mark-bad {
