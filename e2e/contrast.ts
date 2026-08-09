@@ -489,7 +489,10 @@ export async function auditContrast(page: Page, within = 'body *'): Promise<Cont
       if (clip && clip !== 'auto') {
         const nums = clip.match(/-?[\d.]+/g)?.map(Number);
         if (nums && nums.length === 4) {
-          const [top, right, bottom, left] = nums;
+          // Tuple-typed: under `noUncheckedIndexedAccess` a plain destructure of
+          // `number[]` yields `number | undefined` for each name, which fails
+          // `tsc --noEmit` in the repos whose build typechecks the e2e tree.
+          const [top, right, bottom, left] = nums as [number, number, number, number];
           if (bottom - top <= 0 || right - left <= 0) return true;
         }
       }
@@ -628,6 +631,42 @@ export async function auditContrast(page: Page, within = 'body *'): Promise<Cont
     const nonRenderingSvgText = (el: Element): boolean =>
       el.namespaceURI === SVG_NS && !['text', 'tspan'].includes(el.tagName.toLowerCase());
 
+    /**
+     * The root's background paints the whole canvas, not just the root's box.
+     *
+     * The ancestor walk is geometry-aware, which is right for ordinary boxes and
+     * WRONG for the root: CSS propagates the root element's background to the
+     * canvas and paints it over the entire canvas regardless of the root's own
+     * box (CSS Backgrounds 3, "The Canvas Background"); if the root's background
+     * is transparent the value comes from <body> instead. A lab that sets
+     * `html, body { height: 100% }` on a document several viewports tall has
+     * both boxes exactly one viewport tall, so every element below the fold
+     * intersects neither, the walk ends transparent, and it falls through to
+     * WHITE — reporting dark-theme text against a page that does not exist. In
+     * one lab that was 34 of 38 findings in a single run, and it can mask a real
+     * failure in the other direction just as easily.
+     *
+     * So the canvas is composited under whatever the walk accumulated, before
+     * the final fallback to white. Text inside an opaque panel never reaches
+     * this — the walk breaks out as soon as the backdrop is opaque.
+     */
+    const canvasBackground = ((): RGBA => {
+      const rootCs = styleOf(document.documentElement);
+      const rootRect = rectOf(document.documentElement);
+      const rootPaint = paintAt(rootCs, rootRect, {
+        x: rootRect.left + rootRect.width / 2,
+        y: rootRect.top + rootRect.height / 2,
+      });
+      if (rootPaint.a > 0) return rootPaint;
+      const body = document.body;
+      if (!body) return TRANSPARENT;
+      const bodyRect = rectOf(body);
+      return paintAt(styleOf(body), bodyRect, {
+        x: bodyRect.left + bodyRect.width / 2,
+        y: bodyRect.top + bodyRect.height / 2,
+      });
+    })();
+
     const failures: unknown[] = [];
     for (const el of Array.from(document.querySelectorAll(rootSelector))) {
       const text = ownText(el);
@@ -683,8 +722,8 @@ export async function auditContrast(page: Page, within = 'body *'): Promise<Cont
         node = node.parentElement;
       }
 
-      const fgFinal = over(fg, WHITE);
-      const bgFinal = over(bg, WHITE);
+      const fgFinal = over(over(fg, canvasBackground), WHITE);
+      const bgFinal = over(over(bg, canvasBackground), WHITE);
       const worst = { r: ratio(fgFinal, bgFinal), fg: fgFinal, bg: bgFinal };
 
       // Round to 2dp before comparing so a value that is exactly on the floor
