@@ -48,21 +48,34 @@ export function mountThreshold(root: HTMLElement): { setTranscript: (t: DkgTrans
     const lhs = pointHex(baseMul(candidate))
     const rhs = pointHex(transcript.publicKey)
     const equal = lhs === rhs
-    const enough = chosen.length >= transcript.t
-    const verdict = el('p', { class: `note ${equal ? 'note-ok' : enough ? 'note-bad' : 'note-ok'}` })
-    if (equal) {
-      verdict.append(
-        mark('ok', ''),
-        ` ${chosen.length} shares ≥ t = ${transcript.t}: the interpolated secret regenerates the group key exactly.`,
-      )
+    const t = transcript.t
+    const k = chosen.length
+    const enough = k >= t
+    // Two independent facts, each reported on its own: how many shares were
+    // selected against t, and whether the reconstruction matched the PK. The
+    // reading below is chosen from BOTH, so neither fact is ever inferred
+    // from the other.
+    const countFact = `Selected: ${k} of ${transcript.partyShares.length} shares, so ${k} shares ${enough ? '≥' : '<'} t = ${t}.`
+    const matchFact = `Result: reconstructed·G ${equal ? 'matches' : 'does not match'} the ceremony PK.`
+    const expected = enough === equal
+    let reading: string
+    if (enough && equal) {
+      reading = 'As expected: with at least t shares, Lagrange interpolation regenerates the group key exactly.'
     } else if (enough) {
-      verdict.append(mark('bad', ''), ' Enough shares but the key does not match — this should be impossible; the math is broken.')
+      reading = 'Unexpected: t or more valid shares should always reconstruct the key. This indicates a bug.'
+    } else if (!equal) {
+      reading =
+        'As expected: Lagrange still produces a number, but not the secret. From the shares alone, every possible secret is equally consistent with too few points. The public commitments shown in Exhibit 1 (each dealer’s A₀ and the PK itself) do determine the secret, so against this coalition secrecy rests on the hardness of discrete log, not on missing information.'
     } else {
-      verdict.append(
-        mark('ok', ''),
-        ` ${chosen.length} shares < t = ${transcript.t}: Lagrange still produces *a* number, but it is not the secret — with too few points, every possible secret is equally consistent. The threshold property holds.`,
-      )
+      reading = 'Unexpected: fewer than t shares should match the key only with negligible probability. This indicates a bug.'
     }
+    const verdict = el(
+      'div',
+      { class: `note ${expected ? 'note-ok' : 'note-bad'}` },
+      el('p', {}, countFact),
+      el('p', {}, matchFact),
+      el('p', {}, mark(expected ? 'ok' : 'bad', ''), ` ${reading}`),
+    )
     out.replaceChildren(
       verdict,
       el(

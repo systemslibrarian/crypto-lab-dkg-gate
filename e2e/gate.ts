@@ -685,11 +685,19 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
 
   await threshold.locator('.btn-primary').click();
   await expect(threshold.locator('.compare-out .note-ok')).toContainText('regenerates the group key exactly');
+  // Count and match are separate facts, each stated on its own line.
+  await expect(threshold.locator('.compare-out .note')).toContainText(/shares ≥ t = \d/);
+  await expect(threshold.locator('.compare-out .note')).toContainText('reconstructed·G matches the ceremony PK');
   await scanAt('reconstruction at t shares regenerates the key');
 
   await threshold.locator('.picker input[type="checkbox"]:checked').first().uncheck();
   await threshold.locator('.btn-primary').click();
   await expect(threshold.locator('.compare-out .note')).toContainText(/shares <\s*t/);
+  await expect(threshold.locator('.compare-out .note')).toContainText('reconstructed·G does not match the ceremony PK');
+  // "Equally consistent" is true of the shares alone, not of the public
+  // commitments the lab also shows, and the verdict must say which.
+  await expect(threshold.locator('.compare-out .note')).toContainText('From the shares alone, every possible secret is equally consistent');
+  await expect(threshold.locator('.compare-out .note')).toContainText('public commitments');
   await expect(threshold.locator('code.code-bad')).toBeVisible();
   await scanAt('reconstruction below t lands on the wrong secret');
 
