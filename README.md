@@ -12,7 +12,7 @@ Threshold cryptography always begins with the same hand-wave: *"assume the parti
 
 The primitives, exactly:
 
-- **Pedersen's DKG** (a.k.a. Joint-Feldman): every party runs a **Feldman VSS** as a dealer toward all the others, and the `n` independent sharings are summed coefficient-wise into one joint sharing. The group public key is `PK = Σ A₀` over the qualified dealers; each party's long-term share is the sum of the shares it received.
+- **Joint-Feldman-style teaching ceremony**, a simplified form of Pedersen DKG: every party runs a **Feldman VSS** as a dealer toward all the others, and the `n` independent sharings are summed coefficient-wise into one joint sharing. The group public key is `PK = Σ A₀` over the qualified dealers; each party's long-term share is the sum of the shares it received.
 - **Feldman VSS** is the per-dealer commitment layer: the dealer broadcasts `A_j = a_j·G` ("the polynomial in the exponent") so any share `s` is publicly checkable via `s·G = Σ_j iʲ·A_j`. Provable cheating, not trusted honesty.
 - **The GJKR fix.** Naive Pedersen DKG is *biasable*: a rushing adversary who controls `k` dealers sees every contribution before choosing which of its own dealers to sacrifice to the complaint round, and that choice steers the "random" key among `2ᵏ` values. GJKR's fix is **commit-then-reveal** with *hiding* **Pedersen commitments** `C_j = a_j·G + b_j·H` — the qualified set is fixed while every contribution is still information-theoretically hidden.
 
@@ -26,7 +26,9 @@ Group arithmetic is **ristretto255** (RFC 9496) via [`@noble/curves`](https://gi
 2. **Prove the threshold** — pick any subset of the real final shares, Lagrange-reconstruct, and **compare `reconstructed·G` against the ceremony's `PK` byte for byte.** `t` shares regenerate the key; `t−1` land on a wrong secret — shown, not asserted.
 3. **Bias the key — the GJKR attack & fix** — run the real rushing-adversary attack against naive commitments: all `2ᵏ` candidate keys are enumerated as genuine subset sums, and the adversary steers the final key to a target. Flip on the GJKR hiding commitments and the same lever produces only blind `1/16` luck. A ×20 batch counts the empirical success rate against theory.
 
-**A note on scope.** The runnable ceremony (Exhibit 1) is **Pedersen's DKG / Joint-Feldman** — every party deals a Feldman VSS and the sharings sum into one key, with public complaints and fail-closed qualification. Exhibit 3 then **models the specific attack GJKR (1999) closes and its fix**: it uses real hiding Pedersen commitments and real subset-sum key math to show why a rushing adversary can bias the naive key and why commit-then-reveal removes the information to aim with. It is a faithful model of the bias and the fix, **not** a second full commit-then-reveal ceremony with a separate Feldman-extraction phase — the insight is the teaching target, and it is exact.
+**A note on scope.** The runnable ceremony (Exhibit 1) is **a synchronous Joint-Feldman-style ceremony** — every party deals a Feldman VSS and the sharings sum into one key, with public complaints and fail-closed qualification. Exhibit 3 then **models the specific attack GJKR (1999) closes and its fix**: it uses real hiding Pedersen commitments and real subset-sum key math to show why a rushing adversary can bias the naive key and why commit-then-reveal removes the information to aim with. It is a faithful model of the bias and the fix, **not** a second full commit-then-reveal ceremony with a separate Feldman-extraction phase — the insight is the teaching target, and it is exact.
+
+The browser supplies the authenticated channels and reliable broadcast assumed by the ceremony. Its agreement checks apply within this one-tab model. A universal-composability claim would also require a specified setup, adversary, environment and proof for the composed protocol.
 
 ## When to Use It
 
